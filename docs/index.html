@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instant Website Audit — Free SEO Score</title>
+<meta name="description" content="Enter any website URL and get a free 0-100 SEO audit score in seconds. No signup.">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;
+--mut:#94a3b8;--grn:#22c55e;--amb:#f59e0b;--red:#ef4444;--gry:#64748b}
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;
+background:var(--bg);color:var(--txt);margin:0;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+.hero{text-align:center;padding:40px 0 8px}
+.hero h1{font-size:38px;margin:0 0 10px;letter-spacing:-1px}
+.hero h1 span{color:var(--grn)}
+.hero p{color:var(--mut);font-size:17px;max-width:520px;margin:0 auto}
+form{display:flex;gap:10px;margin:28px 0 8px}
+input[type=url]{flex:1;padding:14px 16px;border-radius:12px;border:1px solid var(--line);
+background:var(--card);color:var(--txt);font-size:16px;min-width:0}
+button{background:var(--grn);color:#052e16;border:0;border-radius:12px;
+padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap}
+button:disabled{opacity:.6;cursor:wait}
+.hint{text-align:center;color:var(--mut);font-size:13px}
+.hint a{color:var(--grn);cursor:pointer}
+#status{text-align:center;color:var(--amb);min-height:24px;margin-top:8px}
+#results{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+padding:26px;margin-top:18px}
+.score-row{display:flex;align-items:center;gap:22px}
+.ring{width:120px;height:120px;flex:none}
+.ring .bg{stroke:var(--line)}.ring .fg{stroke-width:11;fill:none;
+stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;
+transition:stroke-dashoffset .8s ease}
+.ring text{font-size:30px;font-weight:800;fill:var(--txt)}
+.good .fg{stroke:var(--grn)}.mid .fg{stroke:var(--amb)}.bad .fg{stroke:var(--red)}
+.checks{list-style:none;padding:0;margin:18px 0 0}
+.checks li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;
+border-top:1px solid var(--line)}
+.badge{width:26px;height:26px;border-radius:50%;flex:none;display:flex;
+align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
+.pass .badge{background:var(--grn)}.warn .badge{background:var(--amb)}
+.fail .badge{background:var(--red)}.na .badge{background:var(--gry)}
+.checks strong{display:block}.checks .detail{color:var(--mut);font-size:14px}
+.locked-tip{color:var(--mut);font-size:13px;font-style:italic}
+.paywall{background:linear-gradient(135deg,#14532d,#166534);border:1px solid #22c55e;
+border-radius:16px;padding:26px;margin-top:18px;text-align:center}
+.paywall h3{margin:0 0 8px;font-size:22px}
+.paywall p{color:#d1fae5;font-size:15px;max-width:460px;margin:10px auto}
+.soon{display:inline-block;background:#fff;color:#052e16;font-weight:800;
+border-radius:12px;padding:14px 34px;font-size:17px;margin-top:8px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:40px}
+.foot a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Instant Website <span>Audit</span></h1>
+    <p>Enter any website URL. Get a free 0&ndash;100 SEO score in seconds,
+    with the 9 essential on-page checks.</p>
+  </div>
+
+  <form id="auditForm">
+    <input type="url" id="url" placeholder="https://yourbusiness.com" required
+           inputmode="url" autocomplete="off">
+    <button type="submit" id="go">Audit</button>
+  </form>
+  <div class="hint">No signup. No software to install.
+    &middot; <a id="tryExample">Try an example</a></div>
+  <div id="status"></div>
+
+  <div id="results">
+    <div class="card">
+      <div class="score-row">
+        <svg class="ring" id="ring" viewBox="0 0 84 84">
+          <circle class="bg" cx="42" cy="42" r="34" fill="none" stroke-width="11"/>
+          <circle class="fg" id="ringFg" cx="42" cy="42" r="34"/>
+          <text x="42" y="52" text-anchor="middle" id="scoreNum">0</text>
+        </svg>
+        <div>
+          <div style="font-weight:700" id="pageUrl"></div>
+          <div style="color:var(--mut);font-size:14px" id="scoreSub"></div>
+        </div>
+      </div>
+      <ul class="checks" id="checks"></ul>
+    </div>
+
+    <div class="paywall" id="paywall">
+      <h3>Full audit report &mdash; $29</h3>
+      <p><strong>Payments launching soon.</strong><br>
+      The full PDF report &mdash; every issue explained in plain English with
+      step-by-step fixes, priority-ordered &mdash; will be available here shortly.
+      Run the free audit above as many times as you like.</p>
+      <span class="soon">Coming soon</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    General SEO guidance, not a guarantee of rankings.<br>
+    Pages are fetched through a public proxy; very large or heavily
+    protected sites may not audit cleanly.
+  </div>
+</div>
+
+<script>
+'use strict';
+/* Instant Website Audit — static edition.
+ * Fetches the target page through a public CORS proxy, runs the same
+ * 9 on-page checks as the server edition, and shows the free teaser.
+ * Fix tips stay paywalled; payments are not enabled in this build. */
+
+const FETCH_TIMEOUT_MS = 25000;
+const MAX_BYTES = 2 * 1024 * 1024;
+
+const PROXIES = [
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.cors.lol/?url=' + encodeURIComponent(u),
+];
+
+function isBlockedHost(host) {
+  host = host.toLowerCase();
+  if (['localhost'].includes(host) || host.endsWith('.localhost')) return true;
+  if (/^127\./.test(host) || host === '::1' || host === '[::1]') return true;
+  if (/^10\./.test(host) || /^192\.168\./.test(host)) return true;
+  const m = host.match(/^172\.(1[6-9]|2\d|3[01])\./);
+  if (m) return true;
+  return false;
+}
+
+function normalizeUrl(raw) {
+  let u = raw.trim();
+  if (!u) throw new Error('Please enter a website URL.');
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(u)) u = 'https://' + u;
+  let parsed;
+  try { parsed = new URL(u); } catch (e) { throw new Error('Could not parse that URL.'); }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')
+    throw new Error('Only http(s) URLs can be audited.');
+  if (!parsed.hostname || isBlockedHost(parsed.hostname))
+    throw new Error('That host can\u2019t be audited.');
+  return parsed.toString();
+}
+
+async function fetchViaProxy(url) {
+  let lastErr = null;
+  for (const build of PROXIES) {
+    const t0 = performance.now();
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+      const res = await fetch(build(url), {signal: ctrl.signal});
+      clearTimeout(timer);
+      if (!res.ok) { lastErr = new Error('Fetch failed (HTTP ' + res.status + ').'); continue; }
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength > MAX_BYTES) throw new Error('Page is too large to audit.');
+      const text = new TextDecoder('utf-8', {fatal: false}).decode(buf);
+      if (!/<!doctype html|<html/i.test(text.slice(0, 2000)) && !/<head/i.test(text.slice(0, 4000)))
+        throw new Error('That URL did not return an HTML page.');
+      return {html: text, loadMs: Math.round(performance.now() - t0)};
+    } catch (e) {
+      lastErr = e.name === 'AbortError' ? new Error('Timed out fetching the page.') : e;
+    }
+  }
+  throw lastErr || new Error('Could not load the page.');
+}
+
+const GBP_PATTERNS = ['google.com/maps', 'goo.gl/maps', 'maps.google.',
+                      'business.google.com', 'g.page/', 'maps.app.goo.gl'];
+
+function extractSignals(finalUrl, html, loadMs) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const title = (doc.title || '').trim();
+  const meta = name => {
+    const el = doc.querySelector('meta[name="' + name + '"], meta[property="' + name + '"]');
+    return el ? (el.getAttribute('content') || '').trim() : '';
+  };
+  const desc = meta('description');
+  const h1s = [...doc.querySelectorAll('h1')];
+  const imgs = [...doc.querySelectorAll('img')];
+  const missingAlt = imgs.filter(i => {
+    const a = i.getAttribute('alt');
+    return a === null || !a.trim();
+  }).length;
+  const jsonLdTypes = [];
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+    try {
+      const data = JSON.parse(s.textContent);
+      (Array.isArray(data) ? data : [data]).forEach(item => {
+        if (item && item['@type']) {
+          const ts = Array.isArray(item['@type']) ? item['@type'] : [item['@type']];
+          ts.forEach(t => { if (!jsonLdTypes.includes(String(t))) jsonLdTypes.push(String(t)); });
+        }
+      });
+    } catch (e) { /* ignore malformed JSON-LD */ }
+  });
+  const microdataCount = doc.querySelectorAll('[itemscope]').length;
+  const hasGbpLink = [...doc.querySelectorAll('a[href]')].some(a => {
+    const href = (a.getAttribute('href') || '').toLowerCase();
+    return GBP_PATTERNS.some(p => href.includes(p));
+  });
+  const bodyText = doc.body ? doc.body.textContent.replace(/\s+/g, ' ').trim() : '';
+  return {
+    url: finalUrl,
+    protocol: new URL(finalUrl).protocol,
+    title, titleLength: title.length,
+    metaDescription: desc, metaDescriptionLength: desc.length,
+    hasViewport: !!doc.querySelector('meta[name="viewport"]'),
+    h1Count: h1s.length,
+    h1Texts: h1s.slice(0, 3).map(h => h.textContent.trim().slice(0, 80)).filter(Boolean),
+    imagesTotal: imgs.length, imagesMissingAlt: missingAlt,
+    jsonLdTypes, microdataCount, hasGbpLink,
+    loadTimeMs: loadMs,
+    wordCount: bodyText ? bodyText.split(' ').length : 0,
+  };
+}
+
+function scoreAudit(d) {
+  const checks = [];
+  const add = (id, name, status, detail) => checks.push({id, name, status, detail});
+
+  if (!d.title) add('title', 'Title tag', 'fail', 'No <title> set.');
+  else if (d.titleLength < 30 || d.titleLength > 60)
+    add('title', 'Title tag', 'warn', 'Title is ' + d.titleLength + ' characters (ideal: 30-60).');
+  else add('title', 'Title tag', 'pass', 'Title is ' + d.titleLength + ' characters \u2013 in the ideal range.');
+
+  if (!d.metaDescription) add('meta', 'Meta description', 'fail', 'No meta description.');
+  else if (d.metaDescriptionLength < 50 || d.metaDescriptionLength > 160)
+    add('meta', 'Meta description', 'warn', 'Description is ' + d.metaDescriptionLength + ' characters (ideal: 50-160).');
+  else add('meta', 'Meta description', 'pass', 'Description is ' + d.metaDescriptionLength + ' characters \u2013 in the ideal range.');
+
+  if (d.hasViewport) add('viewport', 'Mobile viewport', 'pass', 'Viewport meta tag present \u2013 page is mobile-ready.');
+  else add('viewport', 'Mobile viewport', 'fail', 'No viewport meta tag.');
+
+  if (d.h1Count === 1)
+    add('h1', 'Headings (H1)', 'pass', 'Exactly one H1' + (d.h1Texts[0] ? ': \u201c' + d.h1Texts[0] + '\u201d.' : '.'));
+  else if (d.h1Count === 0) add('h1', 'Headings (H1)', 'fail', 'No H1 found.');
+  else add('h1', 'Headings (H1)', 'warn', d.h1Count + ' H1s found.');
+
+  if (d.imagesTotal === 0) add('alt', 'Image alt text', 'na', 'No images on this page.');
+  else {
+    const pct = Math.round((d.imagesTotal - d.imagesMissingAlt) / d.imagesTotal * 100);
+    if (pct >= 90) add('alt', 'Image alt text', 'pass', pct + '% of ' + d.imagesTotal + ' images have alt text.');
+    else if (pct >= 50) add('alt', 'Image alt text', 'warn', 'Only ' + pct + '% of ' + d.imagesTotal + ' images have alt text.');
+    else add('alt', 'Image alt text', 'fail', 'Only ' + pct + '% of ' + d.imagesTotal + ' images have alt text.');
+  }
+
+  if (d.jsonLdTypes.length) add('schema', 'Structured data', 'pass', 'JSON-LD found: ' + d.jsonLdTypes.join(', ') + '.');
+  else if (d.microdataCount > 0) add('schema', 'Structured data', 'warn', 'Microdata found but no JSON-LD.');
+  else add('schema', 'Structured data', 'fail', 'No schema.org markup detected.');
+
+  if (d.hasGbpLink) add('gbp', 'Google Business Profile link', 'pass', 'Page links to Google Maps / Business Profile.');
+  else add('gbp', 'Google Business Profile link', 'warn', 'No link to your Google Maps listing found.');
+
+  const ms = d.loadTimeMs;
+  if (!ms || ms <= 0) add('speed', 'Page speed', 'na', 'Could not measure load time.');
+  else {
+    const s = (ms / 1000).toFixed(1);
+    if (ms < 2500) add('speed', 'Page speed', 'pass', 'Page fetched in ~' + s + 's (via proxy).');
+    else if (ms < 4000) add('speed', 'Page speed', 'warn', 'Page fetched in ~' + s + 's (aim under 2.5s).');
+    else add('speed', 'Page speed', 'fail', 'Page fetched in ~' + s + 's \u2013 too slow.');
+  }
+
+  if (d.protocol === 'https:') add('https', 'HTTPS', 'pass', 'Served over HTTPS.');
+  else add('https', 'HTTPS', 'fail', 'Page is not served over HTTPS.');
+
+  const scored = checks.filter(c => c.status !== 'na');
+  const points = scored.reduce((t, c) => t + (c.status === 'pass' ? 1 : c.status === 'warn' ? 0.5 : 0), 0);
+  const score = scored.length ? Math.round(points / scored.length * 100) : 0;
+  return {
+    score, checks,
+    fails: checks.filter(c => c.status === 'fail').length,
+    warns: checks.filter(c => c.status === 'warn').length,
+  };
+}
+
+/* ---- UI ---- */
+const form = document.getElementById('auditForm');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+const meta = {pass: ['\u2713', 'Good'], warn: ['!', 'Needs work'],
+              fail: ['\u2715', 'Missing'], na: ['\u2013', 'N/A']};
+
+document.getElementById('tryExample').addEventListener('click', () => {
+  document.getElementById('url').value = 'https://example.com';
+  form.requestSubmit();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('go');
+  btn.disabled = true; btn.textContent = 'Auditing\u2026';
+  status.textContent = 'Fetching and analyzing the page\u2026';
+  results.style.display = 'none';
+  try {
+    const url = normalizeUrl(document.getElementById('url').value);
+    const {html, loadMs} = await fetchViaProxy(url);
+    const data = extractSignals(url, html, loadMs);
+    render(url, scoreAudit(data));
+  } catch (err) {
+    status.textContent = err.message || 'Audit failed.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Audit';
+  }
+});
+
+function render(url, j) {
+  status.textContent = '';
+  results.style.display = 'block';
+
+  const circ = 2 * Math.PI * 34;
+  const fg = document.getElementById('ringFg');
+  const ring = document.getElementById('ring');
+  ring.classList.remove('good', 'mid', 'bad');
+  ring.classList.add(j.score >= 80 ? 'good' : j.score >= 50 ? 'mid' : 'bad');
+  fg.style.strokeDasharray = circ.toFixed(1);
+  fg.style.strokeDashoffset = (circ * (1 - j.score / 100)).toFixed(1);
+
+  let n = 0;
+  const num = document.getElementById('scoreNum');
+  const t = setInterval(() => {
+    n += Math.max(1, Math.round((j.score - n) / 8));
+    if (n >= j.score) { n = j.score; clearInterval(t); }
+    num.textContent = n;
+  }, 30);
+
+  try {
+    const u = new URL(url);
+    document.getElementById('pageUrl').textContent =
+      u.hostname + (u.pathname !== '/' ? u.pathname.slice(0, 30) : '');
+  } catch (e) { document.getElementById('pageUrl').textContent = url; }
+
+  const sub = document.getElementById('scoreSub');
+  if (j.score >= 80) sub.textContent = 'Solid foundation. The full report (coming soon) will show the polish items.';
+  else if (j.score >= 50) sub.textContent =
+    j.fails + ' missing, ' + j.warns + ' need work \u2014 the full report will show exactly how to fix each.';
+  else sub.textContent = 'Major gaps found. The full report will be your fix-it checklist.';
+
+  const ul = document.getElementById('checks');
+  ul.innerHTML = '';
+  j.checks.forEach(c => {
+    const m = meta[c.status];
+    const li = document.createElement('li');
+    li.className = c.status;
+    li.innerHTML = '<span class="badge" title="' + m[1] + '">' + m[0] + '</span>' +
+      '<div><strong>' + esc(c.name) + '</strong>' +
+      '<span class="detail">' + esc(c.detail) + '</span>' +
+      (c.status === 'fail' || c.status === 'warn'
+        ? '<div class="locked-tip">\ud83d\udd12 How to fix this: included in the full report (coming soon).</div>'
+        : '') + '</div>';
+    ul.appendChild(li);
+  });
+  results.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g,
+    ch => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[ch]));
+}
+</script>
+</body>
+</html>
