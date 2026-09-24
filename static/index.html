@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instant Website Audit — Free SEO Score + $29 Full Report</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;
+--mut:#94a3b8;--grn:#22c55e;--amb:#f59e0b;--red:#ef4444;--gry:#64748b}
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;
+background:var(--bg);color:var(--txt);margin:0;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+.hero{text-align:center;padding:40px 0 8px}
+.hero h1{font-size:38px;margin:0 0 10px;letter-spacing:-1px}
+.hero h1 span{color:var(--grn)}
+.hero p{color:var(--mut);font-size:17px;max-width:520px;margin:0 auto}
+form{display:flex;gap:10px;margin:28px 0 8px}
+input[type=url]{flex:1;padding:14px 16px;border-radius:12px;border:1px solid var(--line);
+background:var(--card);color:var(--txt);font-size:16px}
+button{background:var(--grn);color:#052e16;border:0;border-radius:12px;
+padding:14px 26px;font-size:16px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.hint{text-align:center;color:var(--mut);font-size:13px}
+#status{text-align:center;color:var(--amb);min-height:24px;margin-top:8px}
+#results{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+padding:26px;margin-top:18px}
+.score-row{display:flex;align-items:center;gap:22px}
+.ring{width:120px;height:120px;flex:none}
+.ring .bg{stroke:var(--line)}.ring .fg{stroke-width:11;fill:none;
+stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;
+transition:stroke-dashoffset .8s ease}
+.ring text{font-size:30px;font-weight:800;fill:var(--txt)}
+.good .fg{stroke:var(--grn)}.mid .fg{stroke:var(--amb)}.bad .fg{stroke:var(--red)}
+.checks{list-style:none;padding:0;margin:18px 0 0}
+.checks li{display:flex;gap:12px;align-items:flex-start;padding:10px 0;
+border-top:1px solid var(--line)}
+.badge{width:26px;height:26px;border-radius:50%;flex:none;display:flex;
+align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff}
+.pass .badge{background:var(--grn)}.warn .badge{background:var(--amb)}
+.fail .badge{background:var(--red)}.na .badge{background:var(--gry)}
+.checks strong{display:block}.checks .detail{color:var(--mut);font-size:14px}
+.locked-tip{color:var(--mut);font-size:13px;font-style:italic}
+.paywall{background:linear-gradient(135deg,#14532d,#166534);border:1px solid #22c55e;
+border-radius:16px;padding:26px;margin-top:18px;text-align:center}
+.paywall h3{margin:0 0 8px;font-size:22px}
+.paywall ul{text-align:left;color:#d1fae5;font-size:14px;max-width:440px;margin:12px auto}
+.paywall .btn{display:inline-block;background:#fff;color:#052e16;font-weight:800;
+border-radius:12px;padding:14px 34px;text-decoration:none;font-size:17px;margin-top:8px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:40px}
+.blur{filter:blur(4px);user-select:none;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>Instant Website <span>Audit</span></h1>
+    <p>Enter any website URL. Get a free 0&ndash;100 SEO score in seconds.
+    Unlock the full report with every fix explained for <strong>$29</strong>.</p>
+  </div>
+
+  <form id="auditForm">
+    <input type="url" id="url" placeholder="https://yourbusiness.com" required
+           inputmode="url" autocomplete="off">
+    <button type="submit" id="go">Audit</button>
+  </form>
+  <div class="hint">No signup. No software to install.</div>
+  <div id="status"></div>
+
+  <div id="results">
+    <div class="card">
+      <div class="score-row">
+        <svg class="ring" id="ring" viewBox="0 0 84 84">
+          <circle class="bg" cx="42" cy="42" r="34" fill="none" stroke-width="11"/>
+          <circle class="fg" id="ringFg" cx="42" cy="42" r="34"/>
+          <text x="42" y="52" text-anchor="middle" id="scoreNum">0</text>
+        </svg>
+        <div>
+          <div style="font-weight:700" id="pageUrl"></div>
+          <div style="color:var(--mut);font-size:14px" id="scoreSub"></div>
+        </div>
+      </div>
+      <ul class="checks" id="checks"></ul>
+    </div>
+
+    <div class="paywall">
+      <h3>Unlock the full audit report &mdash; $29</h3>
+      <ul>
+        <li>Every issue explained in plain English with step-by-step fixes</li>
+        <li>Priority-ordered: fix the highest-impact items first</li>
+        <li>Copy-ready snippets (title tags, meta descriptions, schema)</li>
+        <li>PDF you can hand to any web designer or keep for records</li>
+      </ul>
+      <a class="btn" id="buyBtn" href="#">Get the full report &mdash; $29</a>
+    </div>
+  </div>
+
+  <div class="foot">
+    General SEO guidance, not a guarantee of rankings. One-time purchase per report.
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('auditForm');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+const meta = {pass:['\u2713','Good'],warn:['!','Needs work'],
+              fail:['\u2715','Missing'],na:['\u2013','N/A']};
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('go');
+  btn.disabled = true; btn.textContent = 'Auditing\u2026';
+  status.textContent = 'Fetching and analyzing the page\u2026';
+  results.style.display = 'none';
+  try {
+    const r = await fetch('/api/audit', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url: document.getElementById('url').value})});
+    const j = await r.json();
+    if (!j.ok) { status.textContent = j.error || 'Audit failed.'; return; }
+    render(j);
+  } catch (err) {
+    status.textContent = 'Network error. Is the server running?';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Audit';
+  }
+});
+
+function render(j) {
+  status.textContent = '';
+  results.style.display = 'block';
+  document.getElementById('buyBtn').href = '/buy?state=' + encodeURIComponent(j.state);
+
+  const circ = 2 * Math.PI * 34;
+  const fg = document.getElementById('ringFg');
+  const ring = document.getElementById('ring');
+  ring.classList.remove('good','mid','bad');
+  ring.classList.add(j.score >= 80 ? 'good' : j.score >= 50 ? 'mid' : 'bad');
+  fg.style.strokeDasharray = circ.toFixed(1);
+  fg.style.strokeDashoffset = (circ * (1 - j.score / 100)).toFixed(1);
+
+  let n = 0;
+  const num = document.getElementById('scoreNum');
+  const t = setInterval(() => {
+    n += Math.max(1, Math.round((j.score - n) / 8));
+    if (n >= j.score) { n = j.score; clearInterval(t); }
+    num.textContent = n;
+  }, 30);
+
+  try {
+    const u = new URL(j.url);
+    document.getElementById('pageUrl').textContent =
+      u.hostname + (u.pathname !== '/' ? u.pathname.slice(0, 30) : '');
+  } catch (e) { document.getElementById('pageUrl').textContent = j.url; }
+
+  const sub = document.getElementById('scoreSub');
+  if (j.score >= 80) sub.textContent = 'Solid foundation. The full report shows the polish items.';
+  else if (j.score >= 50) sub.textContent =
+    j.fails + ' missing, ' + j.warns + ' need work \u2014 the report shows exactly how to fix each.';
+  else sub.textContent = 'Major gaps found. The full report is your fix-it checklist.';
+
+  const ul = document.getElementById('checks');
+  ul.innerHTML = '';
+  j.checks.forEach(c => {
+    const m = meta[c.status];
+    const li = document.createElement('li');
+    li.className = c.status;
+    li.innerHTML = '<span class="badge" title="' + m[1] + '">' + m[0] + '</span>' +
+      '<div><strong>' + esc(c.name) + '</strong>' +
+      '<span class="detail">' + esc(c.detail) + '</span>' +
+      (c.status === 'fail' || c.status === 'warn'
+        ? '<div class="locked-tip">\ud83d\udd12 How to fix this: included in the full report.</div>'
+        : '') + '</div>';
+    ul.appendChild(li);
+  });
+  results.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g,
+    ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+</script>
+</body>
+</html>
