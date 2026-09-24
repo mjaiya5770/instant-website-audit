@@ -98,6 +98,23 @@ that process publicly; the production behavior lives in `api/index.py`
 9. Remove/permanently disable all demo-unlock functionality in production.
 10. Run a real $29 test purchase, verify PDF delivery + webhook, then refund.
 
+## Monetization (added 2026-09-24)
+
+- **Affiliate "Recommended tool" links:** every failed/warned check now shows
+  a `Recommended tool` line under the paywalled tip, mapped per check
+  (title/meta/h1/schema → SEO suite, viewport → website builder,
+  alt → image optimizer, gbp → local SEO tool, speed/https → hosting).
+  Links are clearly-marked placeholders (`AFFILIATE_LINK_TODO_*`) — no fake
+  affiliate URLs go live. Real programs to apply to are listed in
+  `AFFILIATE_SIGNUPS.md` (Hostinger, ShortPixel, Mangools, Surfer SEO,
+  Semrush, Namecheap first; Bluehost/Cloudways later). No visitor data is
+  collected; links carry `rel="nofollow sponsored noopener"`.
+- **Own-product cross-promo (real Gumroad links, no popups):** when the audit
+  scores under 60, a "Starting from scratch?" card promotes the Local Business
+  Website Template Pack ($49). When 2+ checks fail, a "Fix websites for
+  clients?" card promotes the Sell Websites to Local Businesses Playbook ($29).
+- **$29 PDF report stays "coming soon"** — no Stripe or payment code added.
+
 ## Known limitations of the static edition
 
 - Page fetch depends on the public CORS proxy: if allorigins is down or

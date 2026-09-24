@@ -43,6 +43,14 @@ align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#
 .fail .badge{background:var(--red)}.na .badge{background:var(--gry)}
 .checks strong{display:block}.checks .detail{color:var(--mut);font-size:14px}
 .locked-tip{color:var(--mut);font-size:13px;font-style:italic}
+.aff-tools{font-size:13px;color:var(--mut);margin-top:4px}
+.aff-tools a{color:var(--grn)}
+.xpromo{background:var(--card);border:1px solid var(--line);border-radius:16px;
+padding:22px;margin-top:18px}
+.xpromo h4{margin:0 0 6px;font-size:17px}
+.xpromo p{margin:0;color:var(--mut);font-size:14px}
+.xpromo a{color:var(--grn)}
+.disclosure{font-size:11px;color:var(--gry);margin-top:10px}
 .paywall{background:linear-gradient(135deg,#14532d,#166534);border:1px solid #22c55e;
 border-radius:16px;padding:26px;margin-top:18px;text-align:center}
 .paywall h3{margin:0 0 8px;font-size:22px}
@@ -94,12 +102,29 @@ border-radius:12px;padding:14px 34px;font-size:17px;margin-top:8px}
       Run the free audit above as many times as you like.</p>
       <span class="soon">Coming soon</span>
     </div>
+
+    <div class="xpromo" id="xpTemplates" style="display:none">
+      <h4>&#129518; Starting from scratch?</h4>
+      <p id="xpTemplatesText"></p>
+    </div>
+
+    <div class="xpromo" id="xpPlaybook" style="display:none">
+      <h4>&#128188; Fix websites for clients?</h4>
+      <p>Audits like this one are how agencies win work. The
+      <a href="https://mjaiya.gumroad.com/l/sell-websites-to-local-businesses"
+         target="_blank" rel="noopener">Sell Websites to Local Businesses
+         Playbook ($29)</a> is the exact outreach-to-close system for turning
+      broken websites into $1,500&ndash;$2,500 projects.</p>
+    </div>
   </div>
 
   <div class="foot">
     General SEO guidance, not a guarantee of rankings.<br>
     Pages are fetched through a public proxy; very large or heavily
     protected sites may not audit cleanly.
+    <div class="disclosure">Some "recommended tool" links are affiliate links
+    (currently placeholders until programs approve us) &mdash; they cost you
+    nothing extra.</div>
   </div>
 </div>
 
@@ -273,6 +298,24 @@ function scoreAudit(d) {
   };
 }
 
+/* ---- Monetization: affiliate placeholders + own-product cross-promo ----
+ * Affiliate links are clearly-marked placeholders (AFFILIATE_LINK_TODO_*)
+ * until real programs approve us. Swap in the real tracked URLs from
+ * AFFILIATE_SIGNUPS.md, keeping rel="nofollow sponsored noopener".
+ * No visitor data is collected or sent anywhere. */
+const AFFILIATE_TOOLS = {
+  title:    ['SEO on-page optimizer', 'https://AFFILIATE_LINK_TODO_seo_suite'],
+  meta:     ['SEO on-page optimizer', 'https://AFFILIATE_LINK_TODO_seo_suite'],
+  viewport: ['Mobile-friendly website builder', 'https://AFFILIATE_LINK_TODO_website_builder'],
+  h1:       ['SEO on-page optimizer', 'https://AFFILIATE_LINK_TODO_seo_suite'],
+  alt:      ['Image compression tool', 'https://AFFILIATE_LINK_TODO_image_optimizer'],
+  schema:   ['WordPress SEO plugin (schema support)', 'https://AFFILIATE_LINK_TODO_seo_suite'],
+  gbp:      ['Local SEO / listings tool', 'https://AFFILIATE_LINK_TODO_local_seo'],
+  speed:    ['Fast web hosting', 'https://AFFILIATE_LINK_TODO_hosting'],
+  https:    ['Hosting with free SSL', 'https://AFFILIATE_LINK_TODO_hosting'],
+};
+const TEMPLATE_PACK_URL = 'https://mjaiya.gumroad.com/l/local-business-website-template-pack';
+
 /* ---- UI ---- */
 const form = document.getElementById('auditForm');
 const status = document.getElementById('status');
@@ -341,14 +384,42 @@ function render(url, j) {
     const m = meta[c.status];
     const li = document.createElement('li');
     li.className = c.status;
+    let extra = '';
+    if (c.status === 'fail' || c.status === 'warn') {
+      const tool = AFFILIATE_TOOLS[c.id];
+      extra = '<div class="locked-tip">\ud83d\udd12 How to fix this: included in the full report (coming soon).</div>' +
+        (tool ? '<div class="aff-tools">\ud83d\udee0\ufe0f Recommended tool: ' +
+          '<a href="' + tool[1] + '" target="_blank" rel="nofollow sponsored noopener">' +
+          esc(tool[0]) + '</a></div>' : '');
+    }
     li.innerHTML = '<span class="badge" title="' + m[1] + '">' + m[0] + '</span>' +
       '<div><strong>' + esc(c.name) + '</strong>' +
-      '<span class="detail">' + esc(c.detail) + '</span>' +
-      (c.status === 'fail' || c.status === 'warn'
-        ? '<div class="locked-tip">\ud83d\udd12 How to fix this: included in the full report (coming soon).</div>'
-        : '') + '</div>';
+      '<span class="detail">' + esc(c.detail) + '</span>' + extra + '</div>';
     ul.appendChild(li);
   });
+
+  /* Own-product cross-promo, shown only where genuinely relevant. */
+  const xpT = document.getElementById('xpTemplates');
+  const xpP = document.getElementById('xpPlaybook');
+  xpT.style.display = 'none';
+  xpP.style.display = 'none';
+  if (j.score < 60) {
+    xpT.style.display = 'block';
+    document.getElementById('xpTemplatesText').textContent =
+      'This site failed ' + j.fails + ' of 9 checks with ' + j.warns +
+      ' more needing work. When the foundation is this far off, a fresh ' +
+      'start is often faster than patching: the Local Business Website ' +
+      'Template Pack ($49) ships conversion-ready one-page templates with ' +
+      'the SEO basics baked in.';
+    const link = document.createElement('a');
+    link.href = TEMPLATE_PACK_URL;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = ' Get the Template Pack ($49) \u2192';
+    document.getElementById('xpTemplatesText').appendChild(link);
+  }
+  if (j.fails >= 2) xpP.style.display = 'block';
+
   results.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
